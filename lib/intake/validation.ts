@@ -18,7 +18,8 @@ function validatePhone(value: string) {
 
 function validateDateOfBirth(value: string) {
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Enter your date of birth as day, month and year.";
+  if (Number.isNaN(date.getTime()))
+    return "Enter your date of birth as day, month and year.";
 
   const now = new Date();
   if (date > now) return "Date of birth can't be in the future.";
@@ -60,14 +61,19 @@ export function validateField(id: FieldId, values: FieldValues): string | null {
   const value = values[id]?.trim() ?? "";
 
   if (!value) {
-    return field.required ? `${field.label} is required.` : null;
+    if (!field.required) return null;
+    return field.kind === "radio" || field.kind === "select"
+      ? "Choose an option."
+      : "This answer is required.";
   }
 
   switch (id) {
     case "phone":
       return validatePhone(value);
     case "email":
-      return EMAIL.test(value) ? null : "Enter an email address like name@example.com.";
+      return EMAIL.test(value)
+        ? null
+        : "Enter an email address like name@example.com.";
     case "dateOfBirth":
       return validateDateOfBirth(value);
     default:
@@ -98,12 +104,18 @@ export function validateAll(values: FieldValues): FieldErrors {
   );
 }
 
-export function countAnswered(values: FieldValues, skipped: FieldId[] = []): number {
-  return FIELDS.filter((f) => !isBlank(values[f.id]) || skipped.includes(f.id)).length;
+export function countAnswered(
+  values: FieldValues,
+  skipped: FieldId[] = [],
+): number {
+  return FIELDS.filter((f) => !isBlank(values[f.id]) || skipped.includes(f.id))
+    .length;
 }
 
 export function countRequiredAnswered(values: FieldValues, step?: StepId) {
-  const required = (step ? fieldsForStep(step) : FIELDS).filter((f) => f.required);
+  const required = (step ? fieldsForStep(step) : FIELDS).filter(
+    (f) => f.required,
+  );
   return {
     answered: required.filter((f) => !isBlank(values[f.id])).length,
     total: required.length,

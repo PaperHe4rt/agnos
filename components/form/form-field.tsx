@@ -21,6 +21,7 @@ type FormFieldProps = {
   error?: string;
   onChange: (id: FieldId, value: string) => void;
   onBlur: (id: FieldId) => void;
+  onSelect: (id: FieldId, value: string) => void;
 };
 
 export function FormField({
@@ -29,6 +30,7 @@ export function FormField({
   error,
   onChange,
   onBlur,
+  onSelect,
 }: FormFieldProps) {
   const { helpId, errorId, describedBy } = fieldIds(
     field.id,
@@ -54,10 +56,7 @@ export function FormField({
           name={field.id}
           options={field.options ?? []}
           value={value}
-          onSelect={(next) => {
-            onChange(field.id, next);
-            onBlur(field.id);
-          }}
+          onSelect={(next) => onSelect(field.id, next)}
         />
       </Field>
     );
