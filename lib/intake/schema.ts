@@ -1,6 +1,11 @@
 import type { FieldDef, FieldId, StepId } from "./types";
 
-export const STEPS: { id: StepId; title: string; question: string; intro: string }[] = [
+export const STEPS: {
+  id: StepId;
+  title: string;
+  question: string;
+  intro: string;
+}[] = [
   {
     id: 1,
     title: "About you",
@@ -27,7 +32,7 @@ export const STEPS: { id: StepId; title: string; question: string; intro: string
   },
 ];
 
-export const GENDER_OPTIONS = ["Female", "Male", "Non-binary", "Prefer not to say"];
+export const GENDER_OPTIONS = ["Female", "Male", "Prefer not to say"];
 
 export const LANGUAGE_OPTIONS = [
   "English",
@@ -80,7 +85,13 @@ export const RELIGION_OPTIONS = [
 ];
 
 export const FIELDS: FieldDef[] = [
-  { id: "firstName", label: "First name", step: 1, kind: "text", required: true },
+  {
+    id: "firstName",
+    label: "First name",
+    step: 1,
+    kind: "text",
+    required: true,
+  },
   {
     id: "middleName",
     label: "Middle name",
@@ -90,7 +101,13 @@ export const FIELDS: FieldDef[] = [
     help: "Add if you have one.",
   },
   { id: "lastName", label: "Last name", step: 1, kind: "text", required: true },
-  { id: "dateOfBirth", label: "Date of birth", step: 1, kind: "date", required: true },
+  {
+    id: "dateOfBirth",
+    label: "Date of birth",
+    step: 1,
+    kind: "date",
+    required: true,
+  },
   {
     id: "gender",
     label: "Gender",
@@ -108,7 +125,13 @@ export const FIELDS: FieldDef[] = [
     required: true,
     help: "We only email about your care.",
   },
-  { id: "address", label: "Home address", step: 2, kind: "text", required: true },
+  {
+    id: "address",
+    label: "Home address",
+    step: 2,
+    kind: "text",
+    required: true,
+  },
   {
     id: "preferredLanguage",
     label: "Preferred language",
@@ -162,7 +185,9 @@ export const FIELDS: FieldDef[] = [
 
 export const TOTAL_FIELDS = FIELDS.length;
 
-export const OPTIONAL_FIELD_IDS = FIELDS.filter((f) => !f.required).map((f) => f.id);
+export const OPTIONAL_FIELD_IDS = FIELDS.filter((f) => !f.required).map(
+  (f) => f.id,
+);
 
 export function getField(id: FieldId): FieldDef {
   const field = FIELDS.find((f) => f.id === id);

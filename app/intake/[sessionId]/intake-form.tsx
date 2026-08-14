@@ -62,6 +62,13 @@ export function IntakeForm() {
     setErrors((prev) => withError(prev, id, validateField(id, values)));
   }
 
+  function handleSelect(id: FieldId, value: string) {
+    const next = { ...values, [id]: value };
+    setValues(next);
+    setTouched((prev) => new Set(prev).add(id));
+    setErrors((prev) => withError(prev, id, validateField(id, next)));
+  }
+
   function goToStep(next: StepId) {
     setStep(next);
     window.scrollTo({ top: 0 });
@@ -131,6 +138,7 @@ export function IntakeForm() {
                   error={visibleErrors[field.id]}
                   onChange={handleChange}
                   onBlur={handleBlur}
+                  onSelect={handleSelect}
                 />
               ))}
             </div>

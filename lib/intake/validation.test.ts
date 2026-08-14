@@ -21,12 +21,18 @@ const complete: FieldValues = {
 };
 
 describe("required fields", () => {
-  it("names the field that is missing", () => {
-    expect(validateField("firstName", {})).toBe("First name is required.");
+  it("flags a missing answer without repeating the label", () => {
+    expect(validateField("firstName", {})).toBe("This answer is required.");
+  });
+
+  it("asks a radio group to choose rather than to answer", () => {
+    expect(validateField("gender", {})).toBe("Choose an option.");
   });
 
   it("treats whitespace as missing", () => {
-    expect(validateField("firstName", { firstName: "   " })).toBe("First name is required.");
+    expect(validateField("firstName", { firstName: "   " })).toBe(
+      "This answer is required.",
+    );
   });
 
   it("leaves optional fields alone", () => {
@@ -45,7 +51,9 @@ describe("phone", () => {
   });
 
   it("rejects more digits than E.164 allows", () => {
-    expect(validateField("phone", { phone: "1234567890123456" })).not.toBeNull();
+    expect(
+      validateField("phone", { phone: "1234567890123456" }),
+    ).not.toBeNull();
   });
 });
 
@@ -65,19 +73,27 @@ describe("email", () => {
 
 describe("date of birth", () => {
   it("rejects a future date", () => {
-    expect(validateField("dateOfBirth", { dateOfBirth: "2999-01-01" })).not.toBeNull();
+    expect(
+      validateField("dateOfBirth", { dateOfBirth: "2999-01-01" }),
+    ).not.toBeNull();
   });
 
   it("rejects a date beyond a plausible lifespan", () => {
-    expect(validateField("dateOfBirth", { dateOfBirth: "1850-01-01" })).not.toBeNull();
+    expect(
+      validateField("dateOfBirth", { dateOfBirth: "1850-01-01" }),
+    ).not.toBeNull();
   });
 
   it("rejects text that is not a date", () => {
-    expect(validateField("dateOfBirth", { dateOfBirth: "not a date" })).not.toBeNull();
+    expect(
+      validateField("dateOfBirth", { dateOfBirth: "not a date" }),
+    ).not.toBeNull();
   });
 
   it("accepts a real birth date", () => {
-    expect(validateField("dateOfBirth", { dateOfBirth: "1991-03-12" })).toBeNull();
+    expect(
+      validateField("dateOfBirth", { dateOfBirth: "1991-03-12" }),
+    ).toBeNull();
   });
 });
 
@@ -97,19 +113,26 @@ describe("emergency contact", () => {
   it("asks for the other two once a name is given", () => {
     const values = { emergencyContactName: "Kofi Mensah" };
     expect(validateField("emergencyContactName", values)).toBeNull();
-    expect(validateField("emergencyContactRelationship", values)).not.toBeNull();
+    expect(
+      validateField("emergencyContactRelationship", values),
+    ).not.toBeNull();
     expect(validateField("emergencyContactPhone", values)).not.toBeNull();
   });
 
   it("asks for the other two once only a phone is given", () => {
     const values = { emergencyContactPhone: "+1 415 555 0199" };
     expect(validateField("emergencyContactName", values)).not.toBeNull();
-    expect(validateField("emergencyContactRelationship", values)).not.toBeNull();
+    expect(
+      validateField("emergencyContactRelationship", values),
+    ).not.toBeNull();
   });
 
   it("checks the contact phone like any other number", () => {
     expect(
-      validateField("emergencyContactPhone", { ...filled, emergencyContactPhone: "+1 415" }),
+      validateField("emergencyContactPhone", {
+        ...filled,
+        emergencyContactPhone: "+1 415",
+      }),
     ).not.toBeNull();
   });
 
