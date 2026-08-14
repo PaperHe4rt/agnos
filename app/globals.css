@@ -26,6 +26,8 @@
   --color-status-submitted: oklch(0.6 0.12 250);
   --color-status-inactive: oklch(0.72 0.03 250);
 
+  --color-control: oklch(0.64 0.02 250);
+
   /* Type scale */
   --text-display: 1.875rem;
   --text-display--line-height: 2.25rem;
