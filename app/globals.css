@@ -1,26 +1,50 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  /* Surfaces */
+  --color-canvas: oklch(0.98 0.012 85);
+  --color-canvas-edge: oklch(0.9 0.012 85);
+  --color-surface: #ffffff;
+  --color-line: oklch(0.88 0.01 250);
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Text */
+  --color-ink: oklch(0.27 0.02 250);
+  --color-ink-muted: oklch(0.42 0.018 250);
+  --color-ink-soft: oklch(0.55 0.015 250);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+  /* Accent */
+  --color-accent: oklch(0.55 0.09 195);
+  --color-accent-strong: oklch(0.42 0.1 195);
+  --color-accent-tint: oklch(0.94 0.03 195);
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Validation */
+  --color-danger: oklch(0.55 0.15 25);
+  --color-danger-tint: oklch(0.96 0.02 25);
+
+  /* Patient status */
+  --color-status-active: oklch(0.56 0.11 150);
+  --color-status-submitted: oklch(0.6 0.12 250);
+  --color-status-inactive: oklch(0.72 0.03 250);
+
+  /* Type scale */
+  --text-display: 1.875rem;
+  --text-display--line-height: 2.25rem;
+  --text-display--letter-spacing: -0.02em;
+  --text-question: 1.25rem;
+  --text-question--line-height: 1.75rem;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.125rem;
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1rem;
+
+  /* Geometry */
+  --radius-field: 10px;
+  --radius-card: 16px;
+  --spacing-touch: 3rem; /* 48px minimum touch target */
+  --shadow-card: 0 18px 40px -28px oklch(0.27 0.02 250 / 0.45);
+
+  --font-sans: var(--font-figtree), system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
 }
