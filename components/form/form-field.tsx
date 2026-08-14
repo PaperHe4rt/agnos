@@ -1,6 +1,10 @@
+import { dateOfBirthBounds } from "@/lib/intake/validation";
 import type { FieldDef, FieldId, FieldKind } from "@/lib/intake/types";
+import { Combobox } from "./combobox";
 import { Field, fieldIds } from "./field";
 import { RadioGroup } from "./radio-group";
+import { SelectInput } from "./select-input";
+import { TextareaInput } from "./textarea-input";
 import { TextInput } from "./text-input";
 
 function inputType(kind: FieldKind) {
@@ -19,6 +23,8 @@ type FormFieldProps = {
   field: FieldDef;
   value: string;
   error?: string;
+  required: boolean;
+  today: string;
   onChange: (id: FieldId, value: string) => void;
   onBlur: (id: FieldId) => void;
   onSelect: (id: FieldId, value: string) => void;
@@ -28,6 +34,8 @@ export function FormField({
   field,
   value,
   error,
+  required,
+  today,
   onChange,
   onBlur,
   onSelect,
@@ -41,13 +49,47 @@ export function FormField({
   const shell = {
     id: field.id,
     label: field.label,
-    required: field.required,
+    required,
     help: field.help,
     helpId,
     error,
     errorId,
     describedBy,
   };
+
+  const control = {
+    id: field.id,
+    value,
+    required,
+    invalid: Boolean(error),
+    describedBy,
+    onChange: (next: string) => onChange(field.id, next),
+    onBlur: () => onBlur(field.id),
+  };
+
+  if (field.kind === "textarea") {
+    return (
+      <Field {...shell}>
+        <TextareaInput {...control} />
+      </Field>
+    );
+  }
+
+  if (field.kind === "select") {
+    return (
+      <Field {...shell}>
+        <SelectInput {...control} options={field.options ?? []} />
+      </Field>
+    );
+  }
+
+  if (field.kind === "combobox") {
+    return (
+      <Field {...shell}>
+        <Combobox {...control} options={field.options ?? []} />
+      </Field>
+    );
+  }
 
   if (field.kind === "radio") {
     return (
@@ -62,17 +104,15 @@ export function FormField({
     );
   }
 
+  const bounds = field.kind === "date" ? dateOfBirthBounds(today) : undefined;
+
   return (
     <Field {...shell}>
       <TextInput
-        id={field.id}
+        {...control}
         type={inputType(field.kind)}
-        value={value}
-        required={field.required}
-        invalid={Boolean(error)}
-        describedBy={describedBy}
-        onChange={(next) => onChange(field.id, next)}
-        onBlur={() => onBlur(field.id)}
+        min={bounds?.min}
+        max={bounds?.max}
       />
     </Field>
   );

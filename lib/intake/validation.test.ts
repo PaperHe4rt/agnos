@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   countAnswered,
   countRequiredAnswered,
+  isFieldRequired,
   validateAll,
   validateField,
   validateStep,
@@ -134,6 +135,20 @@ describe("emergency contact", () => {
         emergencyContactPhone: "+1 415",
       }),
     ).not.toBeNull();
+  });
+
+  it("turns required the moment one of the three is answered", () => {
+    expect(isFieldRequired("emergencyContactRelationship", {})).toBe(false);
+    expect(
+      isFieldRequired("emergencyContactRelationship", {
+        emergencyContactName: "Kofi",
+      }),
+    ).toBe(true);
+  });
+
+  it("leaves the static required flag alone for every other field", () => {
+    expect(isFieldRequired("firstName", {})).toBe(true);
+    expect(isFieldRequired("religion", {})).toBe(false);
   });
 
   it("passes when all three are given", () => {

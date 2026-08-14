@@ -16,7 +16,15 @@ export type FieldId =
 
 export type StepId = 1 | 2 | 3 | 4;
 
-export type FieldKind = "text" | "email" | "tel" | "date" | "radio" | "select" | "combobox";
+export type FieldKind =
+  | "text"
+  | "email"
+  | "tel"
+  | "date"
+  | "textarea"
+  | "radio"
+  | "select"
+  | "combobox";
 
 export type FieldDef = {
   id: FieldId;

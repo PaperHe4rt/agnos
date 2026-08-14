@@ -2,7 +2,13 @@ import { FIELDS, fieldsForStep, getField } from "./schema";
 import type { FieldErrors, FieldId, FieldValues, StepId } from "./types";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const MAX_AGE_YEARS = 120;
+export const MAX_AGE_YEARS = 120;
+
+export function dateOfBirthBounds(today: string) {
+  const oldest = new Date(today);
+  oldest.setFullYear(oldest.getFullYear() - MAX_AGE_YEARS);
+  return { min: oldest.toISOString().slice(0, 10), max: today };
+}
 
 function isBlank(value: string | undefined) {
   return !value || value.trim() === "";
@@ -43,10 +49,18 @@ function isEmergencyField(id: FieldId): id is EmergencyFieldId {
   return id in EMERGENCY_FIELDS;
 }
 
-// Optional as a group, but not half-filled: one answer asks for the rest.
-function validateEmergencyContact(id: EmergencyFieldId, values: FieldValues) {
+function emergencyContactStarted(values: FieldValues) {
   const ids = Object.keys(EMERGENCY_FIELDS) as EmergencyFieldId[];
-  if (ids.every((f) => isBlank(values[f]))) return null;
+  return ids.some((id) => !isBlank(values[id]));
+}
+
+export function isFieldRequired(id: FieldId, values: FieldValues): boolean {
+  if (isEmergencyField(id)) return emergencyContactStarted(values);
+  return getField(id).required;
+}
+
+function validateEmergencyContact(id: EmergencyFieldId, values: FieldValues) {
+  if (!emergencyContactStarted(values)) return null;
 
   const value = values[id]?.trim() ?? "";
   if (!value) return EMERGENCY_FIELDS[id];
@@ -62,9 +76,7 @@ export function validateField(id: FieldId, values: FieldValues): string | null {
 
   if (!value) {
     if (!field.required) return null;
-    return field.kind === "radio" || field.kind === "select"
-      ? "Choose an option."
-      : "This answer is required.";
+    return "This answer is required.";
   }
 
   switch (id) {

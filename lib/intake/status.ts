@@ -9,7 +9,9 @@ export const ERROR_SUBMITS_FOR_HELP = 2;
 
 export function getStatus(session: IntakeSession, now: number): PatientStatus {
   if (session.submittedAt !== null) return "submitted";
-  return now - session.lastKeystrokeAt >= INACTIVE_AFTER_MS ? "inactive" : "active";
+  return now - session.lastKeystrokeAt >= INACTIVE_AFTER_MS
+    ? "inactive"
+    : "active";
 }
 
 // Drives the pulsing dot and the "typing" line, not the status itself.
@@ -29,12 +31,13 @@ export function getAttentionFlag(session: IntakeSession): AttentionFlag {
   return stuckOnField || stuckOnSubmit ? "needs_help" : null;
 }
 
-// Submitting settles every optional field the patient left blank, so a finished
-// intake reads 14/14 rather than stalling short of the total.
 export function getProgress(session: IntakeSession) {
   const skipped =
     session.submittedAt !== null ? OPTIONAL_FIELD_IDS : session.skippedFields;
-  return { answered: countAnswered(session.values, skipped), total: TOTAL_FIELDS };
+  return {
+    answered: countAnswered(session.values, skipped),
+    total: TOTAL_FIELDS,
+  };
 }
 
 export function formatRelativeTime(timestamp: number, now: number): string {
@@ -45,6 +48,6 @@ export function formatRelativeTime(timestamp: number, now: number): string {
   return new Date(timestamp).toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
-    hourCycle: "h23", // hour12:false renders midnight as 24:05 in en-US
+    hourCycle: "h23",
   });
 }

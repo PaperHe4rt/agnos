@@ -4,11 +4,15 @@ import { useState } from "react";
 import { Wordmark } from "@/components/wordmark";
 import { ErrorSummary } from "@/components/form/error-summary";
 import { FormField } from "@/components/form/form-field";
+import { ReviewStep } from "@/components/form/review-step";
 import { StepFooter } from "@/components/form/step-footer";
 import { StepRail } from "@/components/form/step-rail";
-import { STEPS, fieldsForStep } from "@/lib/intake/schema";
+import { SubmittedStep } from "@/components/form/submitted-step";
+import { FIELDS, STEPS, fieldsForStep, getField } from "@/lib/intake/schema";
 import {
   countRequiredAnswered,
+  isFieldRequired,
+  validateAll,
   validateField,
   validateStep,
 } from "@/lib/intake/validation";
@@ -19,7 +23,9 @@ import type {
   StepId,
 } from "@/lib/intake/types";
 
-const LAST_BUILT_STEP = 2;
+type Phase = "form" | "review" | "submitted";
+
+const LAST_STEP = STEPS.length as StepId;
 
 function withError(
   errors: FieldErrors,
@@ -32,12 +38,15 @@ function withError(
   return next;
 }
 
-export function IntakeForm() {
+export function IntakeForm({ today }: { today: string }) {
+  const [phase, setPhase] = useState<Phase>("form");
   const [step, setStep] = useState<StepId>(1);
   const [values, setValues] = useState<FieldValues>({});
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Set<FieldId>>(new Set());
+  const [skipped, setSkipped] = useState<FieldId[]>([]);
   const [attempt, setAttempt] = useState(0);
+  const [submittedAt, setSubmittedAt] = useState<number | null>(null);
 
   const stepFields = fieldsForStep(step);
   const stepCopy = STEPS.find((entry) => entry.id === step);
@@ -52,9 +61,14 @@ export function IntakeForm() {
   function handleChange(id: FieldId, value: string) {
     const next = { ...values, [id]: value };
     setValues(next);
-
-    if (errors[id])
-      setErrors((prev) => withError(prev, id, validateField(id, next)));
+    setSkipped((prev) => prev.filter((skippedId) => skippedId !== id));
+    setErrors((prev) => {
+      let updated = prev;
+      for (const errorId of Object.keys(prev) as FieldId[]) {
+        updated = withError(updated, errorId, validateField(errorId, next));
+      }
+      return updated;
+    });
   }
 
   function handleBlur(id: FieldId) {
@@ -70,6 +84,7 @@ export function IntakeForm() {
   }
 
   function goToStep(next: StepId) {
+    setPhase("form");
     setStep(next);
     window.scrollTo({ top: 0 });
   }
@@ -92,8 +107,44 @@ export function IntakeForm() {
     });
     setAttempt((count) => count + 1);
 
-    if (Object.keys(stepErrors).length === 0) goToStep((step + 1) as StepId);
+    if (Object.keys(stepErrors).length > 0) return;
+
+    if (step === LAST_STEP) {
+      setPhase("review");
+      window.scrollTo({ top: 0 });
+    } else {
+      goToStep((step + 1) as StepId);
+    }
   }
+
+  function handleSkip() {
+    const blank = stepFields
+      .filter((field) => !field.required && !values[field.id]?.trim())
+      .map((field) => field.id);
+
+    setSkipped((prev) => [...new Set([...prev, ...blank])]);
+    setPhase("review");
+    window.scrollTo({ top: 0 });
+  }
+
+  function handleSubmit() {
+    if (submittedAt) return;
+
+    const allErrors = validateAll(values);
+    if (Object.keys(allErrors).length > 0) {
+      setErrors(allErrors);
+      setTouched(new Set(FIELDS.map((field) => field.id)));
+      setAttempt((count) => count + 1);
+      goToStep(getField(Object.keys(allErrors)[0] as FieldId).step);
+      return;
+    }
+
+    setSubmittedAt(Date.now());
+    setPhase("submitted");
+    window.scrollTo({ top: 0 });
+  }
+
+  const optionalStep = stepFields.every((field) => !field.required);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -102,20 +153,22 @@ export function IntakeForm() {
       </header>
 
       <div className="mx-auto w-full max-w-5xl flex-1 px-6 py-8 sm:px-10 lg:grid lg:grid-cols-[240px_1fr] lg:gap-12 lg:py-12">
-        <StepRail step={step} values={values} />
+        {phase === "form" ? <StepRail step={step} values={values} /> : <div />}
 
-        {step > LAST_BUILT_STEP ? (
-          <div className="rounded-card border border-canvas-edge bg-surface p-6">
-            <h1 className="text-question font-semibold">Preferences</h1>
-            <button
-              type="button"
-              onClick={() => goToStep(LAST_BUILT_STEP)}
-              className="mt-6 inline-flex h-touch items-center justify-center rounded-field border border-line px-5 font-semibold text-ink hover:bg-accent-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              Back
-            </button>
-          </div>
-        ) : (
+        {phase === "submitted" && submittedAt ? (
+          <SubmittedStep values={values} submittedAt={submittedAt} />
+        ) : null}
+
+        {phase === "review" ? (
+          <ReviewStep
+            values={values}
+            skipped={skipped}
+            onEdit={goToStep}
+            onSubmit={handleSubmit}
+          />
+        ) : null}
+
+        {phase === "form" ? (
           <form
             noValidate
             onSubmit={(event) => {
@@ -136,6 +189,8 @@ export function IntakeForm() {
                   field={field}
                   value={values[field.id] ?? ""}
                   error={visibleErrors[field.id]}
+                  required={isFieldRequired(field.id, values)}
+                  today={today}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   onSelect={handleSelect}
@@ -147,10 +202,12 @@ export function IntakeForm() {
               answered={required.answered}
               total={required.total}
               canGoBack={step > 1}
+              isLastStep={step === LAST_STEP}
               onBack={() => goToStep((step - 1) as StepId)}
+              onSkip={optionalStep ? handleSkip : undefined}
             />
           </form>
-        )}
+        ) : null}
       </div>
     </div>
   );
