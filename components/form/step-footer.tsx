@@ -1,13 +1,12 @@
 type StepFooterProps = {
-  answered: number;
-  total: number;
   canGoBack: boolean;
+  isLastStep: boolean;
   onBack: () => void;
 };
 
-export function StepFooter({ answered, total, canGoBack, onBack }: StepFooterProps) {
+export function StepFooter({ canGoBack, isLastStep, onBack }: StepFooterProps) {
   return (
-    <div className="sticky bottom-0 mt-8 flex items-center gap-4 border-t border-line bg-canvas px-1 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:static lg:pb-4">
+    <div className="sticky bottom-0 mt-8 flex flex-wrap items-center gap-4 border-t border-line bg-canvas px-1 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:static lg:pb-4">
       {canGoBack ? (
         <button
           type="button"
@@ -18,15 +17,11 @@ export function StepFooter({ answered, total, canGoBack, onBack }: StepFooterPro
         </button>
       ) : null}
 
-      <span className="hidden font-mono text-meta text-ink-soft sm:inline">
-        {answered} of {total} required answered
-      </span>
-
       <button
         type="submit"
         className="ml-auto inline-flex h-touch items-center justify-center rounded-field bg-accent px-6 font-semibold text-white transition-colors hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
-        Continue
+        {isLastStep ? "Review answers" : "Continue"}
       </button>
     </div>
   );

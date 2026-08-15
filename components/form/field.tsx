@@ -35,9 +35,15 @@ export function Field({
   asGroup,
   children,
 }: FieldProps) {
-  const marker = (
+  const requiredMark = required ? (
+    <span aria-hidden="true" className="mr-1 text-danger">
+      *
+    </span>
+  ) : null;
+
+  const optionalMark = required ? null : (
     <span className="font-mono text-meta uppercase tracking-[0.12em] text-ink-soft">
-      {required ? "Required" : "Optional"}
+      Optional
     </span>
   );
 
@@ -60,8 +66,11 @@ export function Field({
     return (
       <fieldset aria-describedby={describedBy} className="flex flex-col gap-2">
         <legend className="mb-2 flex w-full items-baseline justify-between gap-3">
-          <span className="text-label font-semibold">{label}</span>
-          {marker}
+          <span className="text-label font-semibold">
+            {requiredMark}
+            {label}
+          </span>
+          {optionalMark}
         </legend>
         {children}
         {details}
@@ -73,9 +82,10 @@ export function Field({
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-3">
         <label htmlFor={id} className="text-label font-semibold">
+          {requiredMark}
           {label}
         </label>
-        {marker}
+        {optionalMark}
       </div>
       {children}
       {details}

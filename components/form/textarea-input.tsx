@@ -1,46 +1,35 @@
 const BASE =
-  "h-touch w-full rounded-field border border-control bg-surface px-4 text-body " +
+  "min-h-28 w-full rounded-field border border-control bg-surface px-4 py-3 text-body " +
   "placeholder:text-ink-soft " +
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
   "aria-invalid:border-danger aria-invalid:bg-danger-tint " +
   "disabled:opacity-60";
 
-type TextInputProps = {
+type TextareaInputProps = {
   id: string;
-  type: "text" | "tel" | "email" | "date";
   value: string;
   required: boolean;
   invalid: boolean;
   describedBy?: string;
-  placeholder?: string;
-  min?: string;
-  max?: string;
   onChange: (value: string) => void;
   onBlur: () => void;
 };
 
-export function TextInput({
+export function TextareaInput({
   id,
-  type,
   value,
   required,
   invalid,
   describedBy,
-  placeholder,
-  min,
-  max,
   onChange,
   onBlur,
-}: TextInputProps) {
+}: TextareaInputProps) {
   return (
-    <input
+    <textarea
       id={id}
       name={id}
-      type={type}
+      rows={3}
       value={value}
-      placeholder={placeholder}
-      min={min}
-      max={max}
       aria-required={required}
       aria-invalid={invalid}
       aria-describedby={describedBy}

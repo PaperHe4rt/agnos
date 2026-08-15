@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   countAnswered,
   countRequiredAnswered,
+  isFieldRequired,
   validateAll,
   validateField,
   validateStep,
@@ -18,26 +19,28 @@ const complete: FieldValues = {
   address: "418 Marina Blvd, San Francisco, CA 94123",
   preferredLanguage: "English",
   nationality: "Ghanaian",
+  religion: "None",
 };
 
 describe("required fields", () => {
-  it("flags a missing answer without repeating the label", () => {
-    expect(validateField("firstName", {})).toBe("This answer is required.");
-  });
+  it.each(["firstName", "gender", "preferredLanguage"] as const)(
+    "flags a missing %s without repeating the label",
+    (id) => {
+      expect(validateField(id, {})).toBe("This answer is required.");
+    },
+  );
 
-  it("asks a radio group to choose rather than to answer", () => {
-    expect(validateField("gender", {})).toBe("Choose an option.");
-  });
+  it.each(["middleName", "religion"] as const)(
+    "leaves optional %s alone",
+    (id) => {
+      expect(validateField(id, {})).toBeNull();
+    },
+  );
 
   it("treats whitespace as missing", () => {
     expect(validateField("firstName", { firstName: "   " })).toBe(
       "This answer is required.",
     );
-  });
-
-  it("leaves optional fields alone", () => {
-    expect(validateField("middleName", {})).toBeNull();
-    expect(validateField("religion", {})).toBeNull();
   });
 });
 
@@ -136,6 +139,21 @@ describe("emergency contact", () => {
     ).not.toBeNull();
   });
 
+  it("turns required the moment one of the three is answered", () => {
+    expect(isFieldRequired("emergencyContactRelationship", {})).toBe(false);
+    expect(
+      isFieldRequired("emergencyContactRelationship", {
+        emergencyContactName: "Kofi",
+      }),
+    ).toBe(true);
+  });
+
+  it("leaves static required flags alone outside emergency contact", () => {
+    expect(isFieldRequired("firstName", {})).toBe(true);
+    expect(isFieldRequired("middleName", {})).toBe(false);
+    expect(isFieldRequired("religion", {})).toBe(false);
+  });
+
   it("passes when all three are given", () => {
     expect(validateField("emergencyContactName", filled)).toBeNull();
     expect(validateField("emergencyContactRelationship", filled)).toBeNull();
@@ -149,17 +167,27 @@ describe("steps and totals", () => {
     expect(Object.keys(errors).sort()).toEqual(["address", "email", "phone"]);
   });
 
+  it("lets an empty religion through step 3", () => {
+    const errors = validateStep(3, {});
+    expect(Object.keys(errors).sort()).toEqual([
+      "nationality",
+      "preferredLanguage",
+    ]);
+  });
+
   it("passes a complete form", () => {
     expect(validateAll(complete)).toEqual({});
   });
 
   it("counts answered fields, optional ones included", () => {
-    expect(countAnswered(complete)).toBe(9);
-    expect(countAnswered({ ...complete, religion: "None" })).toBe(10);
+    expect(countAnswered(complete)).toBe(10);
+    expect(countAnswered({ ...complete, middleName: "Akua" })).toBe(11);
   });
 
-  it("counts a skipped optional field as settled", () => {
-    expect(countAnswered(complete, ["religion", "middleName"])).toBe(11);
+  it("counts a settled optional field as answered", () => {
+    expect(
+      countAnswered(complete, ["middleName", "emergencyContactName"]),
+    ).toBe(12);
   });
 
   it("counts required answers per step for the step footer", () => {

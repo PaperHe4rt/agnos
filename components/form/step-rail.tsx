@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { STEPS } from "@/lib/intake/schema";
 import { countRequiredAnswered } from "@/lib/intake/validation";
 import type { FieldValues, StepId } from "@/lib/intake/types";
@@ -7,12 +8,26 @@ type StepRailProps = {
   values: FieldValues;
 };
 
+function BackToMainLink() {
+  return (
+    <Link
+      href="/"
+      className="rounded-field px-2 py-1 text-label font-semibold text-accent-strong underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+    >
+      {"<- Back"}
+    </Link>
+  );
+}
+
 export function StepRail({ step, values }: StepRailProps) {
   const { answered, total } = countRequiredAnswered(values);
 
   return (
     <>
       <div className="mb-6 lg:hidden">
+        <div className="-ml-2 mb-4">
+          <BackToMainLink />
+        </div>
         <div className="flex items-baseline justify-between">
           <span className="text-label font-semibold">
             Step {step} of {STEPS.length}
@@ -37,7 +52,12 @@ export function StepRail({ step, values }: StepRailProps) {
       </div>
 
       <nav aria-label="Intake steps" className="hidden lg:block">
-        <p className="font-mono text-meta uppercase tracking-[0.12em] text-ink-soft">Your intake</p>
+        <div className="-ml-2 mb-3">
+          <BackToMainLink />
+        </div>
+        <p className="font-mono text-meta uppercase tracking-[0.12em] text-ink-soft">
+          Your intake
+        </p>
         <ol className="mt-4 flex flex-col gap-1">
           {STEPS.map((entry) => {
             const done = entry.id < step;

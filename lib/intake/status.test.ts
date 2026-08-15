@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   INACTIVE_AFTER_MS,
   TYPING_WINDOW_MS,
+  formatDateOfBirth,
   formatRelativeTime,
   getAttentionFlag,
   getProgress,
   getStatus,
   isTyping,
+  lastUpdatedField,
 } from "./status";
 import { TOTAL_FIELDS } from "./schema";
 import type { IntakeSession } from "./types";
@@ -17,9 +19,9 @@ function session(overrides: Partial<IntakeSession> = {}): IntakeSession {
   return {
     id: "abc12345",
     values: {},
+    fieldUpdatedAt: {},
     lastKeystrokeAt: NOW,
     submittedAt: null,
-    skippedFields: [],
     failedValidations: {},
     errorSubmits: 0,
     ...overrides,
@@ -50,7 +52,9 @@ describe("status", () => {
 
   it("stays submitted no matter how long ago that was", () => {
     const submitted = session({ submittedAt: NOW });
-    expect(getStatus(submitted, NOW + INACTIVE_AFTER_MS * 10)).toBe("submitted");
+    expect(getStatus(submitted, NOW + INACTIVE_AFTER_MS * 10)).toBe(
+      "submitted",
+    );
   });
 });
 
@@ -71,8 +75,12 @@ describe("attention flag", () => {
   });
 
   it("stays null until the third failure on one field", () => {
-    expect(getAttentionFlag(session({ failedValidations: { phone: 2 } }))).toBeNull();
-    expect(getAttentionFlag(session({ failedValidations: { phone: 3 } }))).toBe("needs_help");
+    expect(
+      getAttentionFlag(session({ failedValidations: { phone: 2 } })),
+    ).toBeNull();
+    expect(getAttentionFlag(session({ failedValidations: { phone: 3 } }))).toBe(
+      "needs_help",
+    );
   });
 
   it("does not add failures across different fields", () => {
@@ -86,7 +94,11 @@ describe("attention flag", () => {
   });
 
   it("clears on submit even with failures on the record", () => {
-    const submitted = session({ submittedAt: NOW, failedValidations: { phone: 5 }, errorSubmits: 3 });
+    const submitted = session({
+      submittedAt: NOW,
+      failedValidations: { phone: 5 },
+      errorSubmits: 3,
+    });
     expect(getAttentionFlag(submitted)).toBeNull();
   });
 });
@@ -97,17 +109,36 @@ describe("progress", () => {
     expect(getProgress(working)).toEqual({ answered: 9, total: TOTAL_FIELDS });
   });
 
-  it("credits a step the patient explicitly skipped", () => {
-    const skipped = session({
-      values: answeredRequired,
-      skippedFields: ["emergencyContactName", "emergencyContactRelationship", "emergencyContactPhone"],
-    });
-    expect(getProgress(skipped).answered).toBe(12);
-  });
-
   it("reaches the total on submit even with optional fields left blank", () => {
     const submitted = session({ values: answeredRequired, submittedAt: NOW });
-    expect(getProgress(submitted)).toEqual({ answered: TOTAL_FIELDS, total: TOTAL_FIELDS });
+    expect(getProgress(submitted)).toEqual({
+      answered: TOTAL_FIELDS,
+      total: TOTAL_FIELDS,
+    });
+  });
+});
+
+describe("last updated field", () => {
+  it("is null before the patient has typed anything", () => {
+    expect(lastUpdatedField(session())).toBeNull();
+  });
+
+  it("picks the most recent field, not the last one written", () => {
+    const typed = session({
+      fieldUpdatedAt: { email: NOW, firstName: NOW + 1_000, phone: NOW - 500 },
+    });
+    expect(lastUpdatedField(typed)).toBe("firstName");
+  });
+});
+
+describe("date of birth", () => {
+  it("reads as day, short month, year", () => {
+    expect(formatDateOfBirth("1991-03-12")).toBe("12 Mar 1991");
+  });
+
+  it("hands back anything it cannot parse", () => {
+    expect(formatDateOfBirth("12/03/1991")).toBe("12/03/1991");
+    expect(formatDateOfBirth("1991-13-12")).toBe("1991-13-12");
   });
 });
 
