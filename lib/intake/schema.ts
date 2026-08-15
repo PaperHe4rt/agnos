@@ -26,7 +26,7 @@ export const STEPS: {
   },
   {
     id: 4,
-    title: "Emergency & more",
+    title: "Emergency",
     question: "Anything else we should know?",
     intro: "Nothing here is required. Leave it blank and continue.",
   },
@@ -380,7 +380,7 @@ export const FIELDS: FieldDef[] = [
   },
   {
     id: "emergencyContactPhone",
-    label: "Their phone",
+    label: "Emergency Contact Phone",
     step: 4,
     kind: "tel",
     required: false,

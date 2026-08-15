@@ -1,6 +1,11 @@
 import { OPTIONAL_FIELD_IDS, TOTAL_FIELDS } from "./schema";
 import { countAnswered } from "./validation";
-import type { AttentionFlag, IntakeSession, PatientStatus } from "./types";
+import type {
+  AttentionFlag,
+  FieldId,
+  IntakeSession,
+  PatientStatus,
+} from "./types";
 
 export const TYPING_WINDOW_MS = 30_000;
 export const INACTIVE_AFTER_MS = 3 * 60_000;
@@ -32,12 +37,51 @@ export function getAttentionFlag(session: IntakeSession): AttentionFlag {
 }
 
 export function getProgress(session: IntakeSession) {
-  const skipped =
-    session.submittedAt !== null ? OPTIONAL_FIELD_IDS : session.skippedFields;
+  const settled = session.submittedAt !== null ? OPTIONAL_FIELD_IDS : [];
   return {
-    answered: countAnswered(session.values, skipped),
+    answered: countAnswered(session.values, settled),
     total: TOTAL_FIELDS,
   };
+}
+
+export function lastUpdatedField(session: IntakeSession): FieldId | null {
+  let latest: FieldId | null = null;
+  let latestAt = -Infinity;
+
+  for (const [id, at] of Object.entries(session.fieldUpdatedAt) as [
+    FieldId,
+    number,
+  ][]) {
+    if (at > latestAt) {
+      latest = id;
+      latestAt = at;
+    }
+  }
+  return latest;
+}
+
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+export function formatDateOfBirth(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return value;
+
+  const [, year, month, day] = match;
+  const name = MONTHS[Number(month) - 1];
+  return name ? `${day} ${name} ${year}` : value;
 }
 
 export function formatRelativeTime(timestamp: number, now: number): string {

@@ -17,9 +17,9 @@ function session(overrides: Partial<IntakeSession> = {}): IntakeSession {
   return {
     id: "abc12345",
     values: {},
+    fieldUpdatedAt: {},
     lastKeystrokeAt: NOW,
     submittedAt: null,
-    skippedFields: [],
     failedValidations: {},
     errorSubmits: 0,
     ...overrides,
@@ -36,6 +36,7 @@ const answeredRequired = {
   address: "418 Marina Blvd",
   preferredLanguage: "English",
   nationality: "Ghanaian",
+  religion: "None",
 };
 
 describe("status", () => {
@@ -50,7 +51,9 @@ describe("status", () => {
 
   it("stays submitted no matter how long ago that was", () => {
     const submitted = session({ submittedAt: NOW });
-    expect(getStatus(submitted, NOW + INACTIVE_AFTER_MS * 10)).toBe("submitted");
+    expect(getStatus(submitted, NOW + INACTIVE_AFTER_MS * 10)).toBe(
+      "submitted",
+    );
   });
 });
 
@@ -71,8 +74,12 @@ describe("attention flag", () => {
   });
 
   it("stays null until the third failure on one field", () => {
-    expect(getAttentionFlag(session({ failedValidations: { phone: 2 } }))).toBeNull();
-    expect(getAttentionFlag(session({ failedValidations: { phone: 3 } }))).toBe("needs_help");
+    expect(
+      getAttentionFlag(session({ failedValidations: { phone: 2 } })),
+    ).toBeNull();
+    expect(getAttentionFlag(session({ failedValidations: { phone: 3 } }))).toBe(
+      "needs_help",
+    );
   });
 
   it("does not add failures across different fields", () => {
@@ -86,7 +93,11 @@ describe("attention flag", () => {
   });
 
   it("clears on submit even with failures on the record", () => {
-    const submitted = session({ submittedAt: NOW, failedValidations: { phone: 5 }, errorSubmits: 3 });
+    const submitted = session({
+      submittedAt: NOW,
+      failedValidations: { phone: 5 },
+      errorSubmits: 3,
+    });
     expect(getAttentionFlag(submitted)).toBeNull();
   });
 });
@@ -94,20 +105,15 @@ describe("attention flag", () => {
 describe("progress", () => {
   it("counts only what has been filled in while the patient works", () => {
     const working = session({ values: answeredRequired });
-    expect(getProgress(working)).toEqual({ answered: 9, total: TOTAL_FIELDS });
-  });
-
-  it("credits a step the patient explicitly skipped", () => {
-    const skipped = session({
-      values: answeredRequired,
-      skippedFields: ["emergencyContactName", "emergencyContactRelationship", "emergencyContactPhone"],
-    });
-    expect(getProgress(skipped).answered).toBe(12);
+    expect(getProgress(working)).toEqual({ answered: 10, total: TOTAL_FIELDS });
   });
 
   it("reaches the total on submit even with optional fields left blank", () => {
     const submitted = session({ values: answeredRequired, submittedAt: NOW });
-    expect(getProgress(submitted)).toEqual({ answered: TOTAL_FIELDS, total: TOTAL_FIELDS });
+    expect(getProgress(submitted)).toEqual({
+      answered: TOTAL_FIELDS,
+      total: TOTAL_FIELDS,
+    });
   });
 });
 

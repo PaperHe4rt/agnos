@@ -19,26 +19,25 @@ const complete: FieldValues = {
   address: "418 Marina Blvd, San Francisco, CA 94123",
   preferredLanguage: "English",
   nationality: "Ghanaian",
+  religion: "None",
 };
 
 describe("required fields", () => {
-  it("flags a missing answer without repeating the label", () => {
-    expect(validateField("firstName", {})).toBe("This answer is required.");
-  });
+  it.each(["firstName", "gender", "religion"] as const)(
+    "flags a missing %s without repeating the label",
+    (id) => {
+      expect(validateField(id, {})).toBe("This answer is required.");
+    },
+  );
 
-  it("asks a radio group to choose rather than to answer", () => {
-    expect(validateField("gender", {})).toBe("Choose an option.");
+  it("leaves optional fields alone", () => {
+    expect(validateField("middleName", {})).toBeNull();
   });
 
   it("treats whitespace as missing", () => {
     expect(validateField("firstName", { firstName: "   " })).toBe(
       "This answer is required.",
     );
-  });
-
-  it("leaves optional fields alone", () => {
-    expect(validateField("middleName", {})).toBeNull();
-    expect(validateField("religion", {})).toBeNull();
   });
 });
 
@@ -146,9 +145,10 @@ describe("emergency contact", () => {
     ).toBe(true);
   });
 
-  it("leaves the static required flag alone for every other field", () => {
+  it("leaves static required flags alone outside emergency contact", () => {
     expect(isFieldRequired("firstName", {})).toBe(true);
-    expect(isFieldRequired("religion", {})).toBe(false);
+    expect(isFieldRequired("middleName", {})).toBe(false);
+    expect(isFieldRequired("religion", {})).toBe(true);
   });
 
   it("passes when all three are given", () => {
@@ -169,12 +169,14 @@ describe("steps and totals", () => {
   });
 
   it("counts answered fields, optional ones included", () => {
-    expect(countAnswered(complete)).toBe(9);
-    expect(countAnswered({ ...complete, religion: "None" })).toBe(10);
+    expect(countAnswered(complete)).toBe(10);
+    expect(countAnswered({ ...complete, middleName: "Akua" })).toBe(11);
   });
 
-  it("counts a skipped optional field as settled", () => {
-    expect(countAnswered(complete, ["religion", "middleName"])).toBe(11);
+  it("counts a settled optional field as answered", () => {
+    expect(
+      countAnswered(complete, ["middleName", "emergencyContactName"]),
+    ).toBe(12);
   });
 
   it("counts required answers per step for the step footer", () => {
@@ -182,6 +184,6 @@ describe("steps and totals", () => {
       answered: 1,
       total: 3,
     });
-    expect(countRequiredAnswered(complete)).toEqual({ answered: 9, total: 9 });
+    expect(countRequiredAnswered(complete)).toEqual({ answered: 10, total: 10 });
   });
 });

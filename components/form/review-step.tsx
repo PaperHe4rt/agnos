@@ -2,21 +2,15 @@
 
 import { useEffect, useRef } from "react";
 import { STEPS, fieldsForStep } from "@/lib/intake/schema";
-import type { FieldId, FieldValues, StepId } from "@/lib/intake/types";
+import type { FieldValues, StepId } from "@/lib/intake/types";
 
 type ReviewStepProps = {
   values: FieldValues;
-  skipped: FieldId[];
   onEdit: (step: StepId) => void;
   onSubmit: () => void;
 };
 
-export function ReviewStep({
-  values,
-  skipped,
-  onEdit,
-  onSubmit,
-}: ReviewStepProps) {
+export function ReviewStep({ values, onEdit, onSubmit }: ReviewStepProps) {
   const heading = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -63,10 +57,7 @@ export function ReviewStep({
                     <dd
                       className={`text-body whitespace-pre-line ${value ? "text-ink" : "text-ink-soft"}`}
                     >
-                      {value ??
-                        (skipped.includes(field.id)
-                          ? "Skipped"
-                          : "Not answered")}
+                      {value || "Not answered"}
                     </dd>
                   </div>
                 );

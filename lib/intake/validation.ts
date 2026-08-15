@@ -118,9 +118,9 @@ export function validateAll(values: FieldValues): FieldErrors {
 
 export function countAnswered(
   values: FieldValues,
-  skipped: FieldId[] = [],
+  settled: FieldId[] = [],
 ): number {
-  return FIELDS.filter((f) => !isBlank(values[f.id]) || skipped.includes(f.id))
+  return FIELDS.filter((f) => !isBlank(values[f.id]) || settled.includes(f.id))
     .length;
 }
 

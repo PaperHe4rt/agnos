@@ -10,7 +10,6 @@ import { StepRail } from "@/components/form/step-rail";
 import { SubmittedStep } from "@/components/form/submitted-step";
 import { FIELDS, STEPS, fieldsForStep, getField } from "@/lib/intake/schema";
 import {
-  countRequiredAnswered,
   isFieldRequired,
   validateAll,
   validateField,
@@ -44,13 +43,11 @@ export function IntakeForm({ today }: { today: string }) {
   const [values, setValues] = useState<FieldValues>({});
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<Set<FieldId>>(new Set());
-  const [skipped, setSkipped] = useState<FieldId[]>([]);
   const [attempt, setAttempt] = useState(0);
   const [submittedAt, setSubmittedAt] = useState<number | null>(null);
 
   const stepFields = fieldsForStep(step);
   const stepCopy = STEPS.find((entry) => entry.id === step);
-  const required = countRequiredAnswered(values, step);
 
   const visibleErrors: FieldErrors = {};
   for (const field of stepFields) {
@@ -61,7 +58,6 @@ export function IntakeForm({ today }: { today: string }) {
   function handleChange(id: FieldId, value: string) {
     const next = { ...values, [id]: value };
     setValues(next);
-    setSkipped((prev) => prev.filter((skippedId) => skippedId !== id));
     setErrors((prev) => {
       let updated = prev;
       for (const errorId of Object.keys(prev) as FieldId[]) {
@@ -117,16 +113,6 @@ export function IntakeForm({ today }: { today: string }) {
     }
   }
 
-  function handleSkip() {
-    const blank = stepFields
-      .filter((field) => !field.required && !values[field.id]?.trim())
-      .map((field) => field.id);
-
-    setSkipped((prev) => [...new Set([...prev, ...blank])]);
-    setPhase("review");
-    window.scrollTo({ top: 0 });
-  }
-
   function handleSubmit() {
     if (submittedAt) return;
 
@@ -144,8 +130,6 @@ export function IntakeForm({ today }: { today: string }) {
     window.scrollTo({ top: 0 });
   }
 
-  const optionalStep = stepFields.every((field) => !field.required);
-
   return (
     <div className="flex flex-1 flex-col">
       <header className="border-b border-canvas-edge px-6 py-5 sm:px-10">
@@ -162,7 +146,6 @@ export function IntakeForm({ today }: { today: string }) {
         {phase === "review" ? (
           <ReviewStep
             values={values}
-            skipped={skipped}
             onEdit={goToStep}
             onSubmit={handleSubmit}
           />
@@ -199,12 +182,9 @@ export function IntakeForm({ today }: { today: string }) {
             </div>
 
             <StepFooter
-              answered={required.answered}
-              total={required.total}
               canGoBack={step > 1}
               isLastStep={step === LAST_STEP}
               onBack={() => goToStep((step - 1) as StepId)}
-              onSkip={optionalStep ? handleSkip : undefined}
             />
           </form>
         ) : null}

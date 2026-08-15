@@ -47,9 +47,15 @@ export type AttentionFlag = "needs_help" | null;
 export type IntakeSession = {
   id: string;
   values: FieldValues;
+  fieldUpdatedAt: Partial<Record<FieldId, number>>;
   lastKeystrokeAt: number;
   submittedAt: number | null;
-  skippedFields: FieldId[];
   failedValidations: Partial<Record<FieldId, number>>;
   errorSubmits: number;
 };
+
+export type ConnectionState =
+  | "connecting"
+  | "live"
+  | "reconnecting"
+  | "offline";

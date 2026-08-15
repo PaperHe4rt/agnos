@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import type { FieldValues } from "@/lib/intake/types";
 
@@ -74,6 +75,15 @@ export function SubmittedStep({
           <dd className="text-body">{values.phone || "Not answered"}</dd>
         </div>
       </dl>
+
+      <div className="mt-8 border-t border-line pt-6">
+        <Link
+          href="/"
+          className="inline-flex h-touch items-center justify-center rounded-field bg-accent px-6 font-semibold text-white transition-colors hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          Back to main page
+        </Link>
+      </div>
     </div>
   );
 }
