@@ -38,7 +38,7 @@ Staff can therefore see combinations such as "Active · Needs help".
 
 ## Bonus features
 
-- **Resume on the same device.** Answers survive a reload through `sessionStorage`, and the browser re-sends them so the staff view does not keep stale data.
+- **Resume on the same device.** Answers survive a reload through `sessionStorage`, and the browser re-sends them so the staff view doesn't keep stale data.
 - **Accurate save status.** Shows "Saved · 2s ago" after a successful write and "Not saved · retrying" when a write fails.
 - **Attention flag.** Highlights patients who appear stuck on a field so staff can step in.
 - **Table view.** On screens wider than 1280px, the card grid can switch to a denser table view.
@@ -66,10 +66,9 @@ Tests cover the core logic: validation rules, the status machine, the session hu
 
 Sessions are stored in memory inside a single Node process. **Restarting the server clears every session.** There is no database or persistent storage.
 
-## Planning documents
+## Related documents
 
 - [Project structure](docs/project-structure.md)
-- [Design](docs/design.md)
 - [Component architecture](docs/component-architecture.md)
 - [Real-time synchronisation flow](docs/realtime-sync.md)
 
