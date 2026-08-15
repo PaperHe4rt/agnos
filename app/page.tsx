@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/wordmark";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { StartIntakeButton } from "./start-intake-button";
 
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col">
-      <header className="border-b border-canvas-edge px-6 py-5 sm:px-10">
+      <header className="flex items-center justify-between gap-4 border-b border-canvas-edge px-6 py-5 sm:px-10">
         <Wordmark context="Patient intake" />
+        <ThemeToggle />
       </header>
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-10 px-6 py-12 sm:px-10 sm:py-16">
@@ -46,7 +48,7 @@ export default function Home() {
             <div className="mt-auto">
               <Link
                 href="/staff"
-                className="inline-flex h-touch items-center justify-center rounded-field border border-line px-6 font-semibold text-ink transition-colors hover:bg-accent-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                className="inline-flex h-touch items-center justify-center rounded-field border border-line px-6 font-semibold text-ink hover:bg-accent-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 Open the intake queue
               </Link>

@@ -43,7 +43,7 @@ export function SubmittedStep({
     <div className="rounded-card border border-canvas-edge bg-surface p-6 sm:p-8">
       <span
         aria-hidden="true"
-        className="flex size-10 items-center justify-center rounded-full bg-status-active text-lg text-white"
+        className="flex size-10 items-center justify-center rounded-full bg-status-active text-lg text-on-accent"
       >
         ✓
       </span>
@@ -79,7 +79,7 @@ export function SubmittedStep({
       <div className="mt-8 border-t border-line pt-6">
         <Link
           href="/"
-          className="inline-flex h-touch items-center justify-center rounded-field bg-accent px-6 font-semibold text-white transition-colors hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="inline-flex h-touch items-center justify-center rounded-field bg-accent px-6 font-semibold text-on-accent hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Back to main page
         </Link>

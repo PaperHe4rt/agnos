@@ -16,7 +16,7 @@ export function StartIntakeButton() {
         setStarting(true);
         router.push(`/intake/${newSessionId()}`);
       }}
-      className="inline-flex h-touch items-center justify-center rounded-field bg-accent px-6 font-semibold text-white transition-colors hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-70"
+      className="inline-flex h-touch items-center justify-center rounded-field bg-accent px-6 font-semibold text-on-accent hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-70"
     >
       {starting ? "Opening…" : "Start my intake"}
     </button>

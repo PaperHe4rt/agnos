@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Wordmark } from "@/components/wordmark";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ErrorSummary } from "@/components/form/error-summary";
 import { FormField } from "@/components/form/form-field";
 import { ReviewStep } from "@/components/form/review-step";
@@ -209,7 +210,10 @@ export function IntakeForm({
     <div className="flex flex-1 flex-col">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-canvas-edge px-6 py-5 sm:px-10">
         <Wordmark context="Patient intake" />
-        <SaveIndicator state={saveState} now={now} />
+        <div className="flex items-center gap-3">
+          <SaveIndicator state={saveState} now={now} />
+          <ThemeToggle />
+        </div>
       </header>
 
       <div className="mx-auto w-full max-w-5xl flex-1 px-6 py-8 sm:px-10 lg:grid lg:grid-cols-[240px_1fr] lg:gap-12 lg:py-12">

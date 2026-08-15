@@ -9,11 +9,21 @@ const STATUS = {
   },
 } satisfies Record<PatientStatus, { label: string; dot: string }>;
 
-export function StatusBadge({ status }: { status: PatientStatus }) {
+export function StatusBadge({
+  status,
+  pulse = false,
+}: {
+  status: PatientStatus;
+  pulse?: boolean;
+}) {
   const { label, dot } = STATUS[status];
+  const motion = pulse
+    ? "animate-pulse motion-reduce:animate-none motion-reduce:ring-2 motion-reduce:ring-status-active/40"
+    : "";
+
   return (
     <span className="inline-flex items-center gap-2 text-label font-semibold text-ink">
-      <span aria-hidden="true" className={`size-2.5 shrink-0 ${dot}`} />
+      <span aria-hidden="true" className={`size-2.5 shrink-0 ${dot} ${motion}`} />
       {label}
     </span>
   );

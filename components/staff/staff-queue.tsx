@@ -8,6 +8,12 @@ import {
 } from "@/lib/intake/status";
 import type { ConnectionState, IntakeSession } from "@/lib/intake/types";
 import { ConnectionBanner } from "./connection-status";
+import {
+  clampPage,
+  getPageCount,
+  getPageRange,
+  paginateItems,
+} from "./pagination";
 import { PatientCard } from "./patient-card";
 import { PatientDetail } from "./patient-detail";
 import { QueueTable } from "./queue-table";
@@ -64,16 +70,32 @@ export function StaffQueue({ sessions, now, connection }: StaffQueueProps) {
   const [query, setQuery] = useState("");
   const [dense, setDense] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
-  const sorted = useMemo(
-    () => [...sessions].sort((a, b) => b.lastKeystrokeAt - a.lastKeystrokeAt),
-    [sessions],
-  );
+  const [frozenOrder, setFrozenOrder] = useState<string[] | null>(null);
+
+  const sorted = useMemo(() => {
+    const byActivity = [...sessions].sort(
+      (a, b) => b.lastKeystrokeAt - a.lastKeystrokeAt,
+    );
+    if (!frozenOrder) return byActivity;
+
+    const rank = new Map(frozenOrder.map((id, index) => [id, index]));
+    return byActivity.sort(
+      (a, b) =>
+        (rank.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+        (rank.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+    );
+  }, [sessions, frozenOrder]);
 
   const shown = sorted.filter(
     (session) =>
       matchesFilter(session, filter, now) && matchesQuery(session, query),
   );
+  const pageCount = getPageCount(shown.length);
+  const currentPage = clampPage(page, pageCount);
+  const pageRange = getPageRange(shown.length, currentPage);
+  const visibleSessions = paginateItems(shown, currentPage);
 
   const selected =
     sessions.find((session) => session.id === selectedId) ?? null;
@@ -96,7 +118,10 @@ export function StaffQueue({ sessions, now, connection }: StaffQueueProps) {
                     key={id}
                     type="button"
                     aria-pressed={active}
-                    onClick={() => setFilter(id)}
+                    onClick={() => {
+                      setFilter(id);
+                      setPage(1);
+                    }}
                     className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-label font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                       active
                         ? "border-accent-strong bg-accent-tint text-accent-strong"
@@ -119,7 +144,10 @@ export function StaffQueue({ sessions, now, connection }: StaffQueueProps) {
                   id="queue-search"
                   type="search"
                   value={query}
-                  onChange={(event) => setQuery(event.target.value)}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setPage(1);
+                  }}
                   placeholder="Search name, phone or DOB"
                   className="h-touch w-full rounded-field border border-control bg-surface px-3 text-body text-ink placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 />
@@ -159,7 +187,11 @@ export function StaffQueue({ sessions, now, connection }: StaffQueueProps) {
           </div>
 
           <p className="text-meta text-ink-soft">
-            {shown.length} of {sessions.length} shown · sorted by last activity
+            {shown.length === 0
+              ? "0"
+              : `Showing ${pageRange.start}-${pageRange.end}`}{" "}
+            of {shown.length} shown · {sessions.length} total · sorted by last
+            activity
           </p>
 
           {shown.length === 0 ? (
@@ -176,11 +208,19 @@ export function StaffQueue({ sessions, now, connection }: StaffQueueProps) {
               </p>
             </div>
           ) : (
-            <>
+            <div
+              onFocus={() => {
+                if (!frozenOrder) setFrozenOrder(sorted.map((s) => s.id));
+              }}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget))
+                  setFrozenOrder(null);
+              }}
+            >
               <div
                 className={`grid gap-4 sm:grid-cols-2 xl:grid-cols-3 ${dense ? "xl:hidden" : ""}`}
               >
-                {shown.map((session) => (
+                {visibleSessions.map((session) => (
                   <PatientCard
                     key={session.id}
                     session={session}
@@ -192,16 +232,45 @@ export function StaffQueue({ sessions, now, connection }: StaffQueueProps) {
               </div>
 
               {dense ? (
-                <div className="hidden xl:block">
+                <div className="mt-4 hidden xl:block">
                   <QueueTable
-                    sessions={shown}
+                    sessions={visibleSessions}
                     now={now}
                     selectedId={selectedId}
                     onOpen={setSelectedId}
                   />
                 </div>
               ) : null}
-            </>
+
+              {pageCount > 1 ? (
+                <nav
+                  aria-label="Queue pagination"
+                  className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4"
+                >
+                  <p className="font-mono text-meta text-ink-soft">
+                    Page {currentPage} of {pageCount}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={currentPage === 1}
+                      onClick={() => setPage(currentPage - 1)}
+                      className="h-touch rounded-field border border-line px-4 text-label font-semibold text-ink-muted hover:bg-accent-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      type="button"
+                      disabled={currentPage === pageCount}
+                      onClick={() => setPage(currentPage + 1)}
+                      className="h-touch rounded-field border border-line px-4 text-label font-semibold text-ink-muted hover:bg-accent-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </nav>
+              ) : null}
+            </div>
           )}
         </div>
       </div>

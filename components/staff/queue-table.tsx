@@ -5,6 +5,7 @@ import {
   getAttentionFlag,
   getProgress,
   getStatus,
+  isTyping,
   lastUpdatedField,
 } from "@/lib/intake/status";
 import type { IntakeSession } from "@/lib/intake/types";
@@ -86,7 +87,10 @@ export function QueueTable({
               </td>
               <td className="py-3 pr-4">
                 <div className="flex flex-col items-start gap-1">
-                  <StatusBadge status={getStatus(session, now)} />
+                  <StatusBadge
+                    status={getStatus(session, now)}
+                    pulse={isTyping(session, now)}
+                  />
                   <AttentionFlagBadge flag={getAttentionFlag(session)} />
                 </div>
               </td>

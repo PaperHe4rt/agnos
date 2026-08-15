@@ -1,4 +1,9 @@
-import { getAttentionFlag, getProgress, getStatus } from "@/lib/intake/status";
+import {
+  getAttentionFlag,
+  getProgress,
+  getStatus,
+  isTyping,
+} from "@/lib/intake/status";
 import type { IntakeSession } from "@/lib/intake/types";
 import { AttentionFlagBadge, StatusBadge } from "./status-badge";
 import { describeActivity, patientName } from "./summary";
@@ -33,7 +38,10 @@ export function PatientCard({
             {patientName(session.values)}
           </p>
         </div>
-        <StatusBadge status={getStatus(session, now)} />
+        <StatusBadge
+          status={getStatus(session, now)}
+          pulse={isTyping(session, now)}
+        />
       </div>
 
       <AttentionFlagBadge flag={flag} />
