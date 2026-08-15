@@ -19,7 +19,7 @@ export function StepFooter({ canGoBack, isLastStep, onBack }: StepFooterProps) {
 
       <button
         type="submit"
-        className="ml-auto inline-flex h-touch items-center justify-center rounded-field bg-accent px-6 font-semibold text-white transition-colors hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="ml-auto inline-flex h-touch items-center justify-center rounded-field bg-accent px-6 font-semibold text-on-accent hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         {isLastStep ? "Review answers" : "Continue"}
       </button>

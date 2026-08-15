@@ -1,6 +1,7 @@
 "use client";
 
 import { Wordmark } from "@/components/wordmark";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ConnectionPill } from "@/components/staff/connection-status";
 import { StaffQueue } from "@/components/staff/staff-queue";
 import { useIntakeChannel } from "@/hooks/useIntakeChannel";
@@ -20,7 +21,10 @@ export default function StaffPage() {
             {sessions.length === 1 ? "patient" : "patients"}
           </p>
         </div>
-        <ConnectionPill connection={connection} />
+        <div className="flex items-center gap-3">
+          <ConnectionPill connection={connection} />
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="flex-1">

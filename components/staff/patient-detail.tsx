@@ -8,8 +8,11 @@ import {
   getAttentionFlag,
   getProgress,
   getStatus,
+  isTyping,
+  lastUpdatedField,
 } from "@/lib/intake/status";
 import type { FieldDef, FieldValues, IntakeSession } from "@/lib/intake/types";
+import { useChangedFields } from "@/hooks/useChangedFields";
 import { AttentionFlagBadge, StatusBadge } from "./status-badge";
 import { describeActivity, patientName } from "./summary";
 
@@ -35,6 +38,9 @@ export function PatientDetail({ session, now, onClose }: PatientDetailProps) {
   const closeButton = useRef<HTMLButtonElement>(null);
   const submitted = session.submittedAt !== null;
   const { answered, total } = getProgress(session);
+  const changed = useChangedFields(session);
+  const typing = isTyping(session, now);
+  const typingField = typing ? lastUpdatedField(session) : null;
 
   useEffect(() => {
     closeButton.current?.focus();
@@ -66,7 +72,7 @@ export function PatientDetail({ session, now, onClose }: PatientDetailProps) {
               {patientName(session.values)}
             </h2>
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <StatusBadge status={getStatus(session, now)} />
+              <StatusBadge status={getStatus(session, now)} pulse={typing} />
               <AttentionFlagBadge flag={getAttentionFlag(session)} />
             </div>
             <p className="mt-2 text-meta text-ink-muted">
@@ -108,7 +114,14 @@ export function PatientDetail({ session, now, onClose }: PatientDetailProps) {
                         : value;
 
                     return (
-                      <div key={field.id} className="flex flex-col gap-0.5">
+                      <div
+                        key={field.id}
+                        className={`flex flex-col gap-0.5 rounded-field ${
+                          changed.includes(field.id)
+                            ? "animate-tint motion-reduce:animate-none"
+                            : ""
+                        }`}
+                      >
                         <dt className="text-meta text-ink-soft">
                           {field.label}
                         </dt>
@@ -117,6 +130,14 @@ export function PatientDetail({ session, now, onClose }: PatientDetailProps) {
                             className={`text-body ${shown ? "text-ink" : "text-ink-soft"}`}
                           >
                             {shown || "Not answered"}
+                            {typingField === field.id ? (
+                              <span
+                                aria-hidden="true"
+                                className="ml-0.5 inline-block animate-caret text-accent-strong motion-reduce:animate-none"
+                              >
+                                ▍
+                              </span>
+                            ) : null}
                           </span>
                           {updatedAt ? (
                             <span className="shrink-0 font-mono text-meta text-ink-soft">
