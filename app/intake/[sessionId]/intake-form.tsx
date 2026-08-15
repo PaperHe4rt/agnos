@@ -63,8 +63,6 @@ export function IntakeForm({
   const [submittedAt, setSubmittedAt] = useState<number | null>(null);
   const [restored, setRestored] = useState(false);
 
-  // Nothing renders these — they only ride along on the patch that raises the
-  // attention flag — and a ref cannot go stale between two blurs in one tick.
   const failedValidations = useRef<Partial<Record<FieldId, number>>>({});
   const errorSubmits = useRef(0);
 
@@ -72,31 +70,21 @@ export function IntakeForm({
   const now = useNow(5_000);
   const storageKey = `intake:${sessionId}`;
 
-  // Read after mount, never during render: sessionStorage does not exist on the
-  // server, so reading it in render would desync hydration. Seeding state from
-  // a browser-only store on mount is what the effect is for; the alternatives
-  // all re-key the subtree and risk dropping answers the patient already typed.
   useEffect(() => {
     try {
       const stored = sessionStorage.getItem(storageKey);
       if (stored) {
         const saved = JSON.parse(stored) as Resume;
-        /* eslint-disable react-hooks/set-state-in-effect */
         setValues(saved.values);
         setStep(saved.step);
         setPhase(saved.phase);
         setSubmittedAt(saved.submittedAt);
-        /* eslint-enable react-hooks/set-state-in-effect */
-        // The hub is in memory, so a server restart loses what it knew. Pushing
-        // the whole answer set back puts the staff queue in step again.
         save(
           { values: saved.values, submitted: saved.phase === "submitted" },
           true,
         );
       }
-    } catch {
-      // A corrupt payload is not worth blocking the form over.
-    }
+    } catch {}
     setRestored(true);
   }, [storageKey, save]);
 
@@ -106,8 +94,6 @@ export function IntakeForm({
     sessionStorage.setItem(storageKey, JSON.stringify(resume));
   }, [restored, storageKey, values, step, phase, submittedAt]);
 
-  // 3+ failures on one field is what raises the attention flag on the staff
-  // side, so the counts have to survive a field settling and failing again.
   function recordValidation(nextErrors: FieldErrors, ids: FieldId[]) {
     const counts = { ...failedValidations.current };
     for (const id of ids) {

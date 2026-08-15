@@ -13,7 +13,6 @@ export function ErrorSummary({ errors, attempt }: ErrorSummaryProps) {
   const ref = useRef<HTMLDivElement>(null);
   const ids = Object.keys(errors) as FieldId[];
 
-  // The summary only exists after the failed attempt re-renders, so focus has to wait for the commit.
   useEffect(() => {
     if (attempt > 0) ref.current?.focus();
   }, [attempt]);

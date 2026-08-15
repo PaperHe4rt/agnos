@@ -30,8 +30,6 @@ describe("required fields", () => {
     },
   );
 
-  // Religion is optional in the assignment, and "Prefer not to say" is the
-  // first option rather than a required answer.
   it.each(["middleName", "religion"] as const)(
     "leaves optional %s alone",
     (id) => {

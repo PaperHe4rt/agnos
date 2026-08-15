@@ -21,8 +21,6 @@ function mergePatch(current: SessionPatch, next: SessionPatch): SessionPatch {
   };
 }
 
-// Batches keystrokes into one request and keeps a failed patch until it lands,
-// so the indicator never says "saved" for something the server never got.
 export function useIntakeSync(sessionId: string) {
   const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
   const pending = useRef<SessionPatch>({});
@@ -39,13 +37,10 @@ export function useIntakeSync(sessionId: string) {
       return;
     }
 
-    // Anything typed while the request was in flight is newer, so it wins.
     pending.current = mergePatch(patch, pending.current);
     setSaveState({ status: "failed" });
   }, [sessionId]);
 
-  // The retry is scheduled from the failed state rather than from inside flush,
-  // which would have to call itself.
   useEffect(() => {
     if (saveState.status !== "failed") return;
     const retry = setTimeout(() => void flush(), RETRY_MS);

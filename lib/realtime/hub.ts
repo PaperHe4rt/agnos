@@ -77,7 +77,6 @@ export function applyPatch(
     values,
     fieldUpdatedAt,
     lastKeystrokeAt: now,
-    // Submission is terminal, so the first one wins.
     submittedAt: current.submittedAt ?? (patch.submitted ? now : null),
     failedValidations: patch.failedValidations ?? current.failedValidations,
     errorSubmits: patch.errorSubmits ?? current.errorSubmits,

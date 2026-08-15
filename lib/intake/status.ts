@@ -19,7 +19,6 @@ export function getStatus(session: IntakeSession, now: number): PatientStatus {
     : "active";
 }
 
-// Drives the pulsing dot and the "typing" line, not the status itself.
 export function isTyping(session: IntakeSession, now: number): boolean {
   if (session.submittedAt !== null) return false;
   return now - session.lastKeystrokeAt < TYPING_WINDOW_MS;

@@ -58,7 +58,6 @@ export function Combobox({
       return;
     }
 
-    // Enter picks the highlighted option. Without this, it would submit the step instead lol
     if (event.key === "Enter" && open && matches[active]) {
       event.preventDefault();
       pick(matches[active]);
