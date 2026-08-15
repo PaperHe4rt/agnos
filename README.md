@@ -2,6 +2,10 @@
 
 Two screens that stay in sync. A patient fills out their details on their phone while the front desk sees each answer appear as it is typed — no refresh and no need to wait for submission.
 
+**Live:** [agnos-production-dd7d.up.railway.app](https://agnos-production-dd7d.up.railway.app)
+
+Open the patient form first and start an intake, then open [/staff](https://agnos-production-dd7d.up.railway.app/staff) in a second window. The queue starts empty after every deploy, because sessions live in memory.
+
 ## How to Run
 
 ```bash
