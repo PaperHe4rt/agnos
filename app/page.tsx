@@ -23,7 +23,9 @@ export default function Home() {
         <div className="grid gap-4 sm:grid-cols-2">
           <section className="flex flex-col gap-4 rounded-card border border-canvas-edge bg-surface p-6">
             <div>
-              <h2 className="text-question font-semibold">I'm a patient</h2>
+              <h2 className="text-question font-semibold">
+                I&apos;m a patient
+              </h2>
               <p className="mt-2 text-body text-ink-muted">
                 Four short steps, about six minutes. Answers save as you type.
               </p>

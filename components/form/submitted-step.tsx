@@ -49,7 +49,7 @@ export function SubmittedStep({
       </span>
 
       <h1 ref={heading} tabIndex={-1} className="mt-5 text-display font-bold">
-        You're checked in
+        You&apos;re checked in
       </h1>
       <p className="mt-3 text-body text-ink-muted">
         A member of the front desk has your details. They&apos;ll call you
