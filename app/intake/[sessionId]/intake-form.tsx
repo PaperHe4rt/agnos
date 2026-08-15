@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Wordmark } from "@/components/wordmark";
 import { ErrorSummary } from "@/components/form/error-summary";
 import { FormField } from "@/components/form/form-field";
 import { ReviewStep } from "@/components/form/review-step";
+import { SaveIndicator } from "@/components/form/save-indicator";
 import { StepFooter } from "@/components/form/step-footer";
 import { StepRail } from "@/components/form/step-rail";
 import { SubmittedStep } from "@/components/form/submitted-step";
+import { useIntakeSync } from "@/hooks/useIntakeSync";
+import { useNow } from "@/hooks/useNow";
 import { FIELDS, STEPS, fieldsForStep, getField } from "@/lib/intake/schema";
 import {
   isFieldRequired,
@@ -24,6 +27,13 @@ import type {
 
 type Phase = "form" | "review" | "submitted";
 
+type Resume = {
+  values: FieldValues;
+  step: StepId;
+  phase: Phase;
+  submittedAt: number | null;
+};
+
 const LAST_STEP = STEPS.length as StepId;
 
 function withError(
@@ -37,7 +47,13 @@ function withError(
   return next;
 }
 
-export function IntakeForm({ today }: { today: string }) {
+export function IntakeForm({
+  sessionId,
+  today,
+}: {
+  sessionId: string;
+  today: string;
+}) {
   const [phase, setPhase] = useState<Phase>("form");
   const [step, setStep] = useState<StepId>(1);
   const [values, setValues] = useState<FieldValues>({});
@@ -45,6 +61,62 @@ export function IntakeForm({ today }: { today: string }) {
   const [touched, setTouched] = useState<Set<FieldId>>(new Set());
   const [attempt, setAttempt] = useState(0);
   const [submittedAt, setSubmittedAt] = useState<number | null>(null);
+  const [restored, setRestored] = useState(false);
+
+  // Nothing renders these — they only ride along on the patch that raises the
+  // attention flag — and a ref cannot go stale between two blurs in one tick.
+  const failedValidations = useRef<Partial<Record<FieldId, number>>>({});
+  const errorSubmits = useRef(0);
+
+  const { save, saveState } = useIntakeSync(sessionId);
+  const now = useNow(5_000);
+  const storageKey = `intake:${sessionId}`;
+
+  // Read after mount, never during render: sessionStorage does not exist on the
+  // server, so reading it in render would desync hydration. Seeding state from
+  // a browser-only store on mount is what the effect is for; the alternatives
+  // all re-key the subtree and risk dropping answers the patient already typed.
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(storageKey);
+      if (stored) {
+        const saved = JSON.parse(stored) as Resume;
+        /* eslint-disable react-hooks/set-state-in-effect */
+        setValues(saved.values);
+        setStep(saved.step);
+        setPhase(saved.phase);
+        setSubmittedAt(saved.submittedAt);
+        /* eslint-enable react-hooks/set-state-in-effect */
+        // The hub is in memory, so a server restart loses what it knew. Pushing
+        // the whole answer set back puts the staff queue in step again.
+        save(
+          { values: saved.values, submitted: saved.phase === "submitted" },
+          true,
+        );
+      }
+    } catch {
+      // A corrupt payload is not worth blocking the form over.
+    }
+    setRestored(true);
+  }, [storageKey, save]);
+
+  useEffect(() => {
+    if (!restored) return;
+    const resume: Resume = { values, step, phase, submittedAt };
+    sessionStorage.setItem(storageKey, JSON.stringify(resume));
+  }, [restored, storageKey, values, step, phase, submittedAt]);
+
+  // 3+ failures on one field is what raises the attention flag on the staff
+  // side, so the counts have to survive a field settling and failing again.
+  function recordValidation(nextErrors: FieldErrors, ids: FieldId[]) {
+    const counts = { ...failedValidations.current };
+    for (const id of ids) {
+      if (nextErrors[id]) counts[id] = (counts[id] ?? 0) + 1;
+      else delete counts[id];
+    }
+    failedValidations.current = counts;
+    return counts;
+  }
 
   const stepFields = fieldsForStep(step);
   const stepCopy = STEPS.find((entry) => entry.id === step);
@@ -65,11 +137,16 @@ export function IntakeForm({ today }: { today: string }) {
       }
       return updated;
     });
+    save({ values: next });
   }
 
   function handleBlur(id: FieldId) {
+    const error = validateField(id, values);
     setTouched((prev) => new Set(prev).add(id));
-    setErrors((prev) => withError(prev, id, validateField(id, values)));
+    setErrors((prev) => withError(prev, id, error));
+
+    const counts = recordValidation(error ? { [id]: error } : {}, [id]);
+    save({ values, failedValidations: counts });
   }
 
   function handleSelect(id: FieldId, value: string) {
@@ -77,6 +154,7 @@ export function IntakeForm({ today }: { today: string }) {
     setValues(next);
     setTouched((prev) => new Set(prev).add(id));
     setErrors((prev) => withError(prev, id, validateField(id, next)));
+    save({ values: next });
   }
 
   function goToStep(next: StepId) {
@@ -103,6 +181,12 @@ export function IntakeForm({ today }: { today: string }) {
     });
     setAttempt((count) => count + 1);
 
+    const counts = recordValidation(
+      stepErrors,
+      stepFields.map((field) => field.id),
+    );
+    save({ values, failedValidations: counts }, true);
+
     if (Object.keys(stepErrors).length > 0) return;
 
     if (step === LAST_STEP) {
@@ -121,19 +205,25 @@ export function IntakeForm({ today }: { today: string }) {
       setErrors(allErrors);
       setTouched(new Set(FIELDS.map((field) => field.id)));
       setAttempt((count) => count + 1);
+
+      errorSubmits.current += 1;
+      save({ values, errorSubmits: errorSubmits.current }, true);
+
       goToStep(getField(Object.keys(allErrors)[0] as FieldId).step);
       return;
     }
 
     setSubmittedAt(Date.now());
     setPhase("submitted");
+    save({ values, submitted: true }, true);
     window.scrollTo({ top: 0 });
   }
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="border-b border-canvas-edge px-6 py-5 sm:px-10">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-canvas-edge px-6 py-5 sm:px-10">
         <Wordmark context="Patient intake" />
+        <SaveIndicator state={saveState} now={now} />
       </header>
 
       <div className="mx-auto w-full max-w-5xl flex-1 px-6 py-8 sm:px-10 lg:grid lg:grid-cols-[240px_1fr] lg:gap-12 lg:py-12">

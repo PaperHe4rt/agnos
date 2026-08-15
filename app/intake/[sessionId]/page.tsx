@@ -1,6 +1,9 @@
 import { IntakeForm } from "./intake-form";
 
-export default function IntakePage() {
+export default async function IntakePage(
+  props: PageProps<"/intake/[sessionId]">,
+) {
+  const { sessionId } = await props.params;
   const today = new Date().toISOString().slice(0, 10);
-  return <IntakeForm today={today} />;
+  return <IntakeForm sessionId={sessionId} today={today} />;
 }

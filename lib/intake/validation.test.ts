@@ -23,16 +23,21 @@ const complete: FieldValues = {
 };
 
 describe("required fields", () => {
-  it.each(["firstName", "gender", "religion"] as const)(
+  it.each(["firstName", "gender", "preferredLanguage"] as const)(
     "flags a missing %s without repeating the label",
     (id) => {
       expect(validateField(id, {})).toBe("This answer is required.");
     },
   );
 
-  it("leaves optional fields alone", () => {
-    expect(validateField("middleName", {})).toBeNull();
-  });
+  // Religion is optional in the assignment, and "Prefer not to say" is the
+  // first option rather than a required answer.
+  it.each(["middleName", "religion"] as const)(
+    "leaves optional %s alone",
+    (id) => {
+      expect(validateField(id, {})).toBeNull();
+    },
+  );
 
   it("treats whitespace as missing", () => {
     expect(validateField("firstName", { firstName: "   " })).toBe(
@@ -148,7 +153,7 @@ describe("emergency contact", () => {
   it("leaves static required flags alone outside emergency contact", () => {
     expect(isFieldRequired("firstName", {})).toBe(true);
     expect(isFieldRequired("middleName", {})).toBe(false);
-    expect(isFieldRequired("religion", {})).toBe(true);
+    expect(isFieldRequired("religion", {})).toBe(false);
   });
 
   it("passes when all three are given", () => {
@@ -162,6 +167,14 @@ describe("steps and totals", () => {
   it("reports only the errors on the step being validated", () => {
     const errors = validateStep(2, {});
     expect(Object.keys(errors).sort()).toEqual(["address", "email", "phone"]);
+  });
+
+  it("lets an empty religion through step 3", () => {
+    const errors = validateStep(3, {});
+    expect(Object.keys(errors).sort()).toEqual([
+      "nationality",
+      "preferredLanguage",
+    ]);
   });
 
   it("passes a complete form", () => {
@@ -184,6 +197,6 @@ describe("steps and totals", () => {
       answered: 1,
       total: 3,
     });
-    expect(countRequiredAnswered(complete)).toEqual({ answered: 10, total: 10 });
+    expect(countRequiredAnswered(complete)).toEqual({ answered: 9, total: 9 });
   });
 });

@@ -359,7 +359,7 @@ export const FIELDS: FieldDef[] = [
     label: "Religion",
     step: 3,
     kind: "combobox",
-    required: true,
+    required: false,
     options: RELIGION_OPTIONS,
   },
   {

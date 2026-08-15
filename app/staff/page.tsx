@@ -1,13 +1,14 @@
+"use client";
+
 import { Wordmark } from "@/components/wordmark";
 import { ConnectionPill } from "@/components/staff/connection-status";
 import { StaffQueue } from "@/components/staff/staff-queue";
-import type { ConnectionState } from "@/lib/intake/types";
-import { FIXTURE_NOW, FIXTURE_SESSIONS } from "./fixtures";
+import { useIntakeChannel } from "@/hooks/useIntakeChannel";
+import { useNow } from "@/hooks/useNow";
 
-export default async function StaffPage(props: PageProps<"/staff">) {
-  const { state } = await props.searchParams;
-  const sessions = state === "empty" ? [] : FIXTURE_SESSIONS;
-  const connection: ConnectionState = state === "offline" ? "offline" : "live";
+export default function StaffPage() {
+  const { sessions, connection } = useIntakeChannel();
+  const now = useNow();
 
   return (
     <div className="flex flex-1 flex-col">
@@ -24,11 +25,7 @@ export default async function StaffPage(props: PageProps<"/staff">) {
 
       <main className="flex-1">
         <h1 className="sr-only">Intake queue</h1>
-        <StaffQueue
-          sessions={sessions}
-          now={FIXTURE_NOW}
-          connection={connection}
-        />
+        <StaffQueue sessions={sessions} now={now} connection={connection} />
       </main>
     </div>
   );

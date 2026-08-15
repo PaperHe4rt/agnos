@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   INACTIVE_AFTER_MS,
   TYPING_WINDOW_MS,
+  formatDateOfBirth,
   formatRelativeTime,
   getAttentionFlag,
   getProgress,
   getStatus,
   isTyping,
+  lastUpdatedField,
 } from "./status";
 import { TOTAL_FIELDS } from "./schema";
 import type { IntakeSession } from "./types";
@@ -36,7 +38,6 @@ const answeredRequired = {
   address: "418 Marina Blvd",
   preferredLanguage: "English",
   nationality: "Ghanaian",
-  religion: "None",
 };
 
 describe("status", () => {
@@ -105,7 +106,7 @@ describe("attention flag", () => {
 describe("progress", () => {
   it("counts only what has been filled in while the patient works", () => {
     const working = session({ values: answeredRequired });
-    expect(getProgress(working)).toEqual({ answered: 10, total: TOTAL_FIELDS });
+    expect(getProgress(working)).toEqual({ answered: 9, total: TOTAL_FIELDS });
   });
 
   it("reaches the total on submit even with optional fields left blank", () => {
@@ -114,6 +115,30 @@ describe("progress", () => {
       answered: TOTAL_FIELDS,
       total: TOTAL_FIELDS,
     });
+  });
+});
+
+describe("last updated field", () => {
+  it("is null before the patient has typed anything", () => {
+    expect(lastUpdatedField(session())).toBeNull();
+  });
+
+  it("picks the most recent field, not the last one written", () => {
+    const typed = session({
+      fieldUpdatedAt: { email: NOW, firstName: NOW + 1_000, phone: NOW - 500 },
+    });
+    expect(lastUpdatedField(typed)).toBe("firstName");
+  });
+});
+
+describe("date of birth", () => {
+  it("reads as day, short month, year", () => {
+    expect(formatDateOfBirth("1991-03-12")).toBe("12 Mar 1991");
+  });
+
+  it("hands back anything it cannot parse", () => {
+    expect(formatDateOfBirth("12/03/1991")).toBe("12/03/1991");
+    expect(formatDateOfBirth("1991-13-12")).toBe("1991-13-12");
   });
 });
 
